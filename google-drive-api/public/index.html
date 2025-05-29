@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Archivos Subidos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    ul#fileList {
+      list-style: none;
+      padding: 0;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    ul#fileList li {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    ul#fileList li:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    a {
+      text-decoration: none;
+      color: #3498db;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .actions {
+      margin-top: 10px;
+    }
+
+    .archivo-id {
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>📁 Archivos Subidos</h1>
+  <ul id="fileList"></ul>
+
+  <script>
+  const fileList = document.getElementById('fileList');
+
+  fetch('/drive/list')
+    .then(res => res.json())
+    .then(archivos => {
+      archivos.forEach(file => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <b>${file.name || 'Sin nombre'}</b><br/>
+          <div class="archivo-id">ID: ${file.id}</div>
+          <div class="actions">
+           <a href="${file.viewUrl}" target="_blank">👁️ Ver</a>
+           <a href="${file.downloadUrl}" target="_blank" download>⬇️ Descargar</a>         
+          <a href="#" onclick="eliminarArchivo('{{ file.id }}', this)" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded ml-2 inline-flex items-center">
+          🗑️ Eliminar
+          </a>
+          </div>
+        `;
+        fileList.appendChild(li);
+      });
+    })
+    .catch(error => {
+      console.error('Error al cargar archivos:', error);
+      fileList.innerHTML = '<li>No se pudieron cargar los archivos.</li>';
+    });
+
+    function eliminarArchivo(id, button) {
+  event.preventDefault(); // Evita el salto de página
+
+  if (!confirm('¿Estás seguro de que deseas eliminar este archivo?')) return;
+
+  fetch(`/drive/delete/${id}`, {
+    method: 'DELETE'
+  })
+    .then(res => res.json())
+    .then(data => {
+      console.log(data.message);
+      // Elimina el elemento <li> o el contenedor del botón
+      button.closest('li')?.remove() || button.closest('div')?.remove();
+    })
+    .catch(err => {
+      alert('Error al eliminar archivo');
+      console.error(err);
+    });
+}
+ </script>
+</body>
+</html>
+
